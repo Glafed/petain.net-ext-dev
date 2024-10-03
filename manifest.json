@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "name": "PTNET Extension",
+  "description": "Petain.net la première plateforme nationaliste de streaming musical. Extension plutôt utile si vous êtes fan du site de musique nationaliste.",
+  "version": "1.0",
+  "host_permissions": [
+    "https://petain.net/*",
+    "http://127.0.0.1/*",
+    "ws://127.0.0.1/*"
+  ],
+  "permissions": [
+    "storage",
+    "activeTab",
+    "tabs",
+    "downloads",
+    "scripting",
+    "webRequest"
+  ],
+  "action": {
+    "default_popup": "main.html",
+    "default_icon": "medias/logo.png"
+  },
+  "background": {
+    "service_worker": "src/main.js",
+    "type": "module"
+  },
+  "content_scripts": [{
+    "matches": [
+      "https://petain.net/*"
+    ],
+    "js": [
+      "scripts/content_loader.js"
+    ],
+    "run_at": "document_start"
+  }],
+  "web_accessible_resources": [{
+    "resources": [
+      "scripts/content_script.js"
+    ],
+    "matches": [
+      "https://petain.net/*"
+    ]
+  }]
+}
