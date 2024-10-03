@@ -71,6 +71,8 @@ class WebSocketManager extends EventEmitter {
 
     protected ws: WebSocket | null = null;
     private heartbeatInterval: NodeJS.Timeout | null = null;
+    private MAX_TRIES:number = 100;
+    private tries:number = 0; 
 
     constructor() {
         super();
@@ -78,6 +80,7 @@ class WebSocketManager extends EventEmitter {
 
     protected async connect() {
 
+        this.tries++;
         this.ws = new WebSocket(`ws://localhost:${1488|35654}`);
 
         this.ws.onopen = this.onopen.bind(this);
@@ -99,6 +102,14 @@ class WebSocketManager extends EventEmitter {
     
     protected onclose(event: CloseEvent) {
         console.log(`WebSocket connection closed. Code: ${event.code}, Reason: ${event.reason}, Clean: ${event.wasClean}`);
+        if (this.tries < this.MAX_TRIES) {
+            console.log("Reconnecting in 5 seconds");
+            setTimeout(() => {
+                this.connect();
+            }, 5000);
+        } else {
+            console.log("Max tries reached. Stopping reconnection.\nTry restarting the server.");
+        }
         this.stopHeartbeat();
     }
 
