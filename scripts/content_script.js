@@ -29,7 +29,7 @@ function SetCurrentSong(data) {
 
     const pathParts = data._src.split("music")[1].split("/");
     const artistAlbumPart = pathParts[1];
-    const title = pathParts[2].split(".")[0].replace(/^\d+ - /, '');
+    const title = pathParts[2].split(".")[0].replace(/^\d+ - | - \d+$|^\d+ | \d+$/, '');
 
     let artist, album;
 

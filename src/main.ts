@@ -97,11 +97,19 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
             return true;
         case EMessage.MEDIA_INFO:
             console.log("MEDIA_INFO -> Received");
-            if(bIsReady) {
-                await HandleMediaInfo(message.song_data, message.event);
-                sendResponse(true);
-            } else sendResponse(false);
+            if (bIsReady) {
+                try {
+                    await HandleMediaInfo(message.song_data, message.event);
+                    sendResponse(true);
+                } catch (error) {
+                    console.error("Error handling media info:", error);
+                    sendResponse(false);
+                }
+            } else {
+                sendResponse(false);
+            }
             return true;
+            
     }
 });
   

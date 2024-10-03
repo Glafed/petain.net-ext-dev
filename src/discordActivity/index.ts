@@ -114,8 +114,7 @@ class WebSocketManager extends EventEmitter {
     }
 
     protected onerror(event: Event) {
-        console.log("WebSocket error:");
-        console.error(event);
+        console.log("WebSocket error:", event);
         this.emit('error');
         this.ws?.close();
     }
