@@ -6,7 +6,7 @@ var petainTab: chrome.tabs.Tab | undefined = undefined;
 
 var bIsReady: boolean = false;
 
-var activity_manager = new Client(); 
+var activity_manager = new Client();
 
 activity_manager.on('ready', async () => {
     console.log("Ready to send media info");
@@ -53,12 +53,30 @@ async function CheckAndRetrieveMediaInfo(): Promise<void> {
     if (!isMediaPlaying()) return;
 }
 
+activity_manager.on('askActivity', async () => {
+
+    console.log("askActivity -> Sending message to Petain tab");
+
+    if (!petainTab?.id) return;
+
+    chrome.tabs.sendMessage(petainTab.id, { msg: EMessage.MEDIA_INFO }, (response) => {
+        console.log("askActivity -> Response: " + response);
+    });
+
+});
+
 setInterval(CheckAndRetrieveMediaInfo, 5000);
 
-async function HandleMediaInfo(data: any, event: string): Promise<void> {
+function HandleMediaInfo(data: any, event: string): void {
 
     console.log("HandleMediaInfo() -> Event: " + event);
     console.log("HandleMediaInfo() -> Data: " + JSON.stringify(data));
+
+    console.log("HandleMediaInfo() -> Data.src: " + data.src);
+
+    if(!data.src) {
+        event = 'empty';
+    };
 
     var encoded_image = encodeURI(data.src.replace(data.src.split("/")[5], "cover.jpg"))
 
@@ -70,7 +88,7 @@ async function HandleMediaInfo(data: any, event: string): Promise<void> {
 
         .setTimestamps(data.startedAt, data.endAt);
 
-        console.log("HandleMediaInfo() -> Activity: " + JSON.stringify(activity));
+    console.log("HandleMediaInfo() -> Activity: " + JSON.stringify(activity));
 
     switch (event) {
         case 'play':
@@ -80,6 +98,12 @@ async function HandleMediaInfo(data: any, event: string): Promise<void> {
             activity_manager.clearActivity();
             break;
         case 'stop':
+            activity_manager.clearActivity();
+            break;
+        case 'refresh':
+            activity_manager.refresh(activity, activity === null);
+            break;
+        case 'empty':
             activity_manager.clearActivity();
             break;
     }
@@ -97,19 +121,14 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
             return true;
         case EMessage.MEDIA_INFO:
             console.log("MEDIA_INFO -> Received");
+            console.log("MEDIA_INFO -> event: " + message.event);
+            console.log("MEDIA_INFO -> song_data: " + JSON.stringify(message.song_data));
             if (bIsReady) {
-                try {
-                    await HandleMediaInfo(message.song_data, message.event);
+                    HandleMediaInfo(message.song_data, message.event);
                     sendResponse(true);
-                } catch (error) {
-                    console.error("Error handling media info:", error);
-                    sendResponse(false);
-                }
             } else {
                 sendResponse(false);
             }
-            return true;
-            
+
     }
 });
-  

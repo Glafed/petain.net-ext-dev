@@ -96,7 +96,6 @@ class WebSocketManager extends EventEmitter {
     protected onopen() {
         console.log("WebSocket connection opened.");
         this.startHeartbeat();
-        console.log("Event 'ready' emitted");
         this.emit('ready');
     }
     
@@ -121,6 +120,10 @@ class WebSocketManager extends EventEmitter {
 
     protected onmessage(event: MessageEvent) {
         console.log("WebSocket message received:", event.data);
+        var data = JSON.parse(event.data);
+        if(data.event === "ASK_ACTIVITY") {
+            this.emit('askActivity');
+        }
         var message = JSON.parse(event.data.toString());
         console.log("Parsed message:", message);
         this.emit('message');
@@ -174,6 +177,11 @@ export class Client extends WebSocketManager {
     public async setActivity(activity: Activity) {
         this.activity = activity;
         super.send({state: true, activity: this.activity?.toJSON()});
+    }
+
+    public async refresh(activity: Activity, nulled: boolean = false) {
+        this.setActivity(activity);
+        if(nulled) this.clearActivity();
     }
 
     public async clearActivity() {

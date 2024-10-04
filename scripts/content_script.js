@@ -1,4 +1,4 @@
-var OriginalHowl;
+var howlInstance;
 var howlMethods = [];
 var currentSong = {
     title: '',
@@ -35,7 +35,7 @@ function SetCurrentSong(data) {
 
     if (artistAlbumPart.includes(" - ")) {
         [artist, album] = artistAlbumPart.split(" - ");
-        artist = artist.replace(/\d+$/, '').trim(); 
+        artist = artist.replace(/\d+$/, '').trim();
     } else {
         artist = artistAlbumPart.replace(/\d+$/, '').trim();
         album = artistAlbumPart.match(/\d+$/) ? artistAlbumPart.match(/\d+$/)[0] : "Album Inconnu";
@@ -77,6 +77,13 @@ function SendMediaInfo(event) {
                 event: 'pause'
             }
             break;
+        case 'refresh':
+            data = {
+                msg: 'MEDIA_INFOS',
+                song_data: currentSong,
+                event: 'refresh'
+            }
+            break;
     }
 
     window.postMessage({
@@ -99,6 +106,34 @@ function GetObjectMethods(proto) {
 
     return methods;
 }
+
+window.addEventListener('message', async (message) => {
+
+    if (message.source !== window) return;
+
+    if (message.data.message !== 'FROM_CONTENT_LOADER') return
+
+    if (message.data.body !== 'MEDIA_INFOS') return
+
+    
+    
+    if (howlInstance && typeof howlInstance.seek === 'function') {
+        await howlInstance.seek();
+    } else {
+        console.error("howlInstance is not defined or does not have a seek method");
+    }
+    
+    SendMediaInfo('refresh');
+
+    /*window.postMessage({
+        message: 'FROM_MEDIA_HANDLER',
+        body: {
+            msg: 'MEDIA_INFOS',
+            song_data: currentSong,
+            event: 'refresh'
+        }
+    });*/
+});
 
 (function () {
 
@@ -165,11 +200,20 @@ function GetObjectMethods(proto) {
                         break;
                     case 'pause':
 
-                        UpdateCurrentSong(this.seek(), 'currentTime');
+                        UpdateCurrentSong(this._sounds[0]._seek, 'currentTime');
 
                         SendMediaInfo('pause');
                         break;
-                    case 'stop':
+                    case 'seek':
+                        if (Array.isArray(this._sounds)) {
+                            this._sounds.forEach(sound => {
+                                UpdateCurrentSong(sound._seek, 'currentTime');
+                            });
+                        } else {
+                            console.error('this._sounds is not an array or is undefined:', this._sounds);
+                        }
+                        //UpdateCurrentSong(this._sounds[0]._seek, 'currentTime');
+                        break;
                 }
 
 
@@ -182,7 +226,7 @@ function GetObjectMethods(proto) {
     async function main() {
         if (settings.debug) console.log('hookScript.js loaded');
 
-        var howlInstance = await WaitForHowl();
+        howlInstance = await WaitForHowl();
 
         if (!settings.hookHowl) return;
 
