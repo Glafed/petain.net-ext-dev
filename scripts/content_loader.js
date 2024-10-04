@@ -22,7 +22,11 @@ window.addEventListener('message', (message) => {
             });
         }
     } catch (error) {
-        console.error('Error handling message event:', error);
+        if (error.message === 'Extension context invalidated') {
+            console.warn('Extension context invalidated. Please reload the extension.');
+        } else {
+            console.error('Error handling message event:', error);
+        }
     }
 });
 
@@ -38,7 +42,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             return true;
         }
     } catch (error) {
-        console.error('Error handling runtime message:', error);
+        if (error.message === 'Extension context invalidated') {
+            console.warn('Extension context invalidated. Please reload the extension.');
+        } else {
+            console.error('Error handling runtime message:', error);
+        }
         sendResponse("Error handling runtime message.");
     }
 });
