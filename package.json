@@ -26,7 +26,7 @@
   "scripts": {
     "clean": "if exist .\\dist rmdir /s /q .\\dist",
     "compile": "npx tsc",
-    "copy-assets": "robocopy .\\ .\\dist\\ /MIR /XD src dist trashbin /XF tsconfig.json *.gitignore",
+    "copy-assets": "robocopy .\\ .\\dist\\ /MIR /XD src dist trashbin node_modules /XF tsconfig.json *.gitignore",
     "build": "npm run clean && npm run compile && npm run copy-assets",
     "dev": "",
     "test": ""
